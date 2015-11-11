@@ -1,8 +1,11 @@
 import javafx.animation.AnimationTimer
 import javafx.application.Application
+import javafx.beans.value.ChangeListener
+import javafx.beans.value.ObservableValue
 import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
+import javafx.scene.control.Toggle
 import javafx.scene.control.ToggleButton
 import javafx.scene.control.ToggleGroup
 import javafx.scene.control.ToolBar
@@ -14,7 +17,8 @@ import java.util.*
 
 class App : Application() {
     var gates: ArrayList<Gate> = arrayListOf()
-    val state = State.POINTER
+    var state = State.POINTER
+    var target: Gate? = null
 
     fun initCircuit() {
         var input1 = InputGate(50.0, 50.0, "A")
@@ -33,7 +37,7 @@ class App : Application() {
 
     fun walkCircuit() {
         var queue: LinkedList<Gate> = linkedListOf()
-        var inputs = gates.filter({it is InputGate}).toCollection(queue)
+        gates.filter({ it is InputGate }).toCollection(queue)
         while (queue.size != 0) {
             val gate = queue.poll()
             gate.calculateOutput()
@@ -53,13 +57,25 @@ class App : Application() {
         val scene = Scene(root)
         val group = ToggleGroup()
         val pointer = ToggleButton("Pointer")
+        val move = ToggleButton("Move")
         val and = ToggleButton("AND")
         pointer.toggleGroup = group
+        move.toggleGroup = group
         and.toggleGroup = group
-        val toolbar = ToolBar(pointer, and)
+        val toolbar = ToolBar(pointer, move, and)
         val canvas = Canvas(800.0, 600.0)
         root.children.add(toolbar)
         root.children.add(canvas)
+        group.selectedToggleProperty().addListener(object : ChangeListener<Toggle> {
+            override fun changed(ov: ObservableValue<out Toggle>?, old: Toggle?, new: Toggle) {
+                state = when (new) {
+                    and -> State.AND
+                    pointer -> State.POINTER
+                    move -> State.MOVE
+                    else -> State.POINTER
+                }
+            }
+        })
         val timeline = object : AnimationTimer() {
             override fun handle(now: Long) {
                 walkCircuit()
@@ -75,6 +91,14 @@ class App : Application() {
             override fun handle(event: MouseEvent) {
                 when (state) {
                     State.POINTER -> pointerClicked(event)
+                    State.MOVE -> moveClicked(event)
+                }
+            }
+        }
+        canvas.onMouseDragged = object : EventHandler<MouseEvent> {
+            override fun handle(event: MouseEvent) {
+                when (state) {
+                    State.MOVE -> moveDragged(event)
                 }
             }
         }
@@ -86,11 +110,26 @@ class App : Application() {
     private fun pointerClicked(event: MouseEvent) {
         for (gate in gates) {
             if (gate.collides(event.x, event.y) && gate is InputGate) {
-                println("Collision")
                 gate.inputs["A"] = !(gate.inputs["A"] as Boolean)
                 break
             }
         }
+    }
+
+    private fun moveClicked(event: MouseEvent) {
+        target = null
+    }
+
+    private fun moveDragged(event: MouseEvent) {
+        if (target == null) {
+            for (gate in gates) {
+                if (gate.collides(event.x, event.y)) {
+                    target = gate
+                }
+            }
+        }
+        target?.x = event.x
+        target?.y = event.y
     }
 }
 

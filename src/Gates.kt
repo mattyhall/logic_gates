@@ -5,11 +5,10 @@ import java.util.*
 
 const val GATE_WIDTH = 30.0
 const val GATE_HEIGHT = 30.0
-const val CONNECTION_WIDTH = GATE_WIDTH/8.0
 
 data class Connection(val output: String, val gate: Gate, val input: String)
 
-abstract class Gate(val x: Double, val y: Double) {
+abstract class Gate(public var x: Double, public var y: Double) {
     abstract var inputs: HashMap<String, Boolean>
     abstract var outputs: HashMap<String, Boolean>
     abstract var inputPositions: HashMap<String, Pair<Double, Double>>
@@ -52,8 +51,10 @@ class InputGate(x: Double, y: Double, public var name: String) : Gate(x, y) {
 
 class AndGate(x: Double, y: Double) : Gate(x, y) {
     override var inputs = hashMapOf("A" to false, "B" to false)
-    override var inputPositions = hashMapOf("A" to (x to y + GATE_HEIGHT/4),
-                                            "B" to (x to y + 3 * GATE_HEIGHT/4))
+    override var inputPositions: HashMap<String, Pair<Double, Double>> = hashMapOf()
+        get() = hashMapOf("A" to (x to y + GATE_HEIGHT / 4),
+                "B" to (x to y + 3 * GATE_HEIGHT / 4))
+
     override var outputs = hashMapOf("Z" to false)
 
     constructor(x: Double, y: Double, nInputs: Int) : this(x, y) {
@@ -83,8 +84,9 @@ class AndGate(x: Double, y: Double) : Gate(x, y) {
 
 class OrGate(x: Double, y: Double) : Gate(x, y) {
     override var inputs = hashMapOf("A" to false, "B" to false)
-    override var inputPositions = hashMapOf("A" to (x to y + GATE_HEIGHT/4),
-                                            "B" to (x to y + 3 * GATE_HEIGHT))
+    override var inputPositions: HashMap<String, Pair<Double, Double>> = hashMapOf()
+        get() = hashMapOf("A" to (x to y + GATE_HEIGHT / 4),
+                "B" to (x to y + 3 * GATE_HEIGHT))
     override var outputs = hashMapOf("Z" to false)
 
     constructor(x: Double, y: Double, nInputs: Int) : this(x,y) {
@@ -106,7 +108,8 @@ class OrGate(x: Double, y: Double) : Gate(x, y) {
 
 class NotGate(x: Double, y: Double) : Gate(x, y) {
     override var inputs = hashMapOf("A" to false)
-    override var inputPositions = hashMapOf("A" to (x to y + GATE_HEIGHT/2))
+    override var inputPositions: HashMap<String, Pair<Double, Double>> = hashMapOf()
+        get() = hashMapOf("A" to (x to y + GATE_HEIGHT / 2))
     override var outputs = hashMapOf("Z" to false)
 
     override fun draw(gc: GraphicsContext) {
@@ -129,7 +132,8 @@ class NotGate(x: Double, y: Double) : Gate(x, y) {
 
 class OutputGate(x: Double, y: Double, name: String) : Gate(x, y) {
     override var inputs = hashMapOf("A" to false)
-    override var inputPositions = hashMapOf("A" to (x to y + GATE_HEIGHT/2))
+    override var inputPositions: HashMap<String, Pair<Double, Double>> = hashMapOf()
+        get() = hashMapOf("A" to (x to y + GATE_HEIGHT / 2))
     override var outputs = hashMapOf("Z" to false)
 
     override fun draw(gc: GraphicsContext) {

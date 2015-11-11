@@ -1,3 +1,3 @@
 public enum class State {
-    POINTER, AND
+    POINTER, MOVE, AND
 }
