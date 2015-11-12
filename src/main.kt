@@ -2,14 +2,12 @@ import javafx.animation.AnimationTimer
 import javafx.application.Application
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
-import javafx.event.EventHandler
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Toggle
 import javafx.scene.control.ToggleButton
 import javafx.scene.control.ToggleGroup
 import javafx.scene.control.ToolBar
-import javafx.scene.input.MouseEvent
 import javafx.scene.layout.VBox
 import javafx.scene.paint.Color
 import javafx.stage.Stage
@@ -87,49 +85,38 @@ class App : Application() {
                 }
             }
         }
-        canvas.onMouseClicked = object : EventHandler<MouseEvent> {
-            override fun handle(event: MouseEvent) {
-                when (state) {
-                    State.POINTER -> pointerClicked(event)
-                    State.MOVE -> moveClicked(event)
+        canvas.setOnMouseClicked({ event ->
+            when (state) {
+                State.POINTER -> {
+                    for (gate in gates) {
+                        if (gate.collides(event.x, event.y) && gate is InputGate) {
+                            gate.inputs["A"] = !(gate.inputs["A"] as Boolean)
+                            break
+                        }
+                    }
+                }
+                State.MOVE -> target = null
+            }
+        })
+        canvas.setOnMouseDragged({ event ->
+            when (state) {
+                State.MOVE -> {
+                    if (target == null) {
+                        for (gate in gates) {
+                            if (gate.collides(event.x, event.y)) {
+                                target = gate
+                            }
+                        }
+                    }
+                    target?.x = event.x
+                    target?.y = event.y
+
                 }
             }
-        }
-        canvas.onMouseDragged = object : EventHandler<MouseEvent> {
-            override fun handle(event: MouseEvent) {
-                when (state) {
-                    State.MOVE -> moveDragged(event)
-                }
-            }
-        }
+        })
         timeline.start()
         primaryStage.scene = scene
         primaryStage.show()
-    }
-
-    private fun pointerClicked(event: MouseEvent) {
-        for (gate in gates) {
-            if (gate.collides(event.x, event.y) && gate is InputGate) {
-                gate.inputs["A"] = !(gate.inputs["A"] as Boolean)
-                break
-            }
-        }
-    }
-
-    private fun moveClicked(event: MouseEvent) {
-        target = null
-    }
-
-    private fun moveDragged(event: MouseEvent) {
-        if (target == null) {
-            for (gate in gates) {
-                if (gate.collides(event.x, event.y)) {
-                    target = gate
-                }
-            }
-        }
-        target?.x = event.x
-        target?.y = event.y
     }
 }
 
